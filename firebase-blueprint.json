@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile in LOVE YOU app",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "authProvider": { "type": "string", "enum": ["google", "email", "phone"] },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "lastSeen": { "type": "number" },
+        "isOnline": { "type": "boolean" }
+      },
+      "required": ["id", "name", "avatarUrl", "authProvider", "createdAt", "updatedAt"]
+    },
+    "Connection": {
+      "title": "Connection",
+      "description": "1-on-1 private connection between two users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userAId": { "type": "string" },
+        "userBId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "disconnected"] },
+        "createdAt": { "type": "number" },
+        "conversationId": { "type": "string" }
+      },
+      "required": ["id", "userAId", "userBId", "status", "createdAt", "conversationId"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Conversation space for connected users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "participants": { "type": "array" },
+        "lastMessageText": { "type": "string" },
+        "lastMessageType": { "type": "string", "enum": ["text", "image", "voice"] },
+        "lastMessageAt": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "participants", "createdAt", "updatedAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Direct message (text, photo, voice note)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "type": { "type": "string", "enum": ["text", "image", "voice"] },
+        "text": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "mediaDuration": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "status": { "type": "string", "enum": ["sending", "sent", "delivered", "read", "failed"] },
+        "readAt": { "type": "number" }
+      },
+      "required": ["id", "conversationId", "senderId", "type", "createdAt", "status"]
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "Private connection invite link",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "creatorAvatar": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "expiresAt": { "type": "number" },
+        "isUsed": { "type": "boolean" },
+        "usedBy": { "type": "string" }
+      },
+      "required": ["id", "code", "creatorId", "createdAt", "expiresAt", "isUsed"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user profiles"
+    },
+    "/connections/{connectionId}": {
+      "schema": "Connection",
+      "description": "Stores 1-on-1 private connection links"
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Stores conversation metadata"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Stores messages within a conversation"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Top-level messages for direct query access"
+    },
+    "/invitations/{code}": {
+      "schema": "Invitation",
+      "description": "Stores invitation link details"
+    }
+  }
+}

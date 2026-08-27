@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && (request.auth.uid == userId || resource == null);
+      allow delete: if isOwner(userId);
+    }
+
+    // Connections Collection
+    match /connections/{connectionId} {
+      allow read: if isSignedIn() && (
+        resource.data.userAId == request.auth.uid || 
+        resource.data.userBId == request.auth.uid
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.userAId == request.auth.uid || 
+        request.resource.data.userBId == request.auth.uid
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.userAId == request.auth.uid || 
+        resource.data.userBId == request.auth.uid
+      );
+    }
+
+    // Conversations Collection
+    match /conversations/{conversationId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid in resource.data.participants
+      );
+      allow create: if isSignedIn() && (
+        request.auth.uid in request.resource.data.participants
+      );
+      allow update: if isSignedIn() && (
+        request.auth.uid in resource.data.participants
+      );
+      allow delete: if isSignedIn() && (
+        request.auth.uid in resource.data.participants
+      );
+
+      // Subcollection Messages
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants
+        );
+        allow create: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants &&
+          request.resource.data.senderId == request.auth.uid
+        );
+        allow update: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants
+        );
+        allow delete: if isSignedIn() && (
+          resource.data.senderId == request.auth.uid
+        );
+      }
+    }
+
+    // Top-Level Messages Collection (Direct Query Support)
+    match /messages/{messageId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+    }
+
+    // Invitations Collection
+    match /invitations/{code} {
+      allow read: if true; // Publicly readable to validate link before full acceptance
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
+    }
+  }
+}

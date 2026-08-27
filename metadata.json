@@ -1,0 +1,10 @@
+{
+  "name": "LOVE YOU",
+  "description": "Luxury Private Messaging App for two connected people with real-time text, photos, and voice messages.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
